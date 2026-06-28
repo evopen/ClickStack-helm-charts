@@ -1,3 +1,4 @@
+{{- include "clickstack.validateOtelDatabase" . }}
 apiVersion: v1
 kind: ConfigMap
 metadata:

@@ -28,7 +28,7 @@ hyperdx:
     OTEL_SERVICE_NAME: "hdx-oss-api"
     USAGE_STATS_ENABLED: "true"
     OPAMP_PORT: "4320"
-    HYPERDX_OTEL_EXPORTER_CLICKHOUSE_DATABASE: "default"
+    HYPERDX_OTEL_EXPORTER_CLICKHOUSE_DATABASE: '{{ .Values.clickhouse.otelDatabase }}'
     CLICKHOUSE_USER: "otelcollector"
     RUN_SCHEDULED_TASKS_EXTERNALLY: "false"
     # Service endpoint defaults -- override to use external instances
@@ -111,7 +111,7 @@ hyperdx:
       [
         {
           "from": {
-            "databaseName": "default",
+            "databaseName": "{{ .Values.clickhouse.otelDatabase }}",
             "tableName": "otel_logs"
           },
           "kind": "log",
@@ -134,7 +134,7 @@ hyperdx:
         },
         {
           "from": {
-            "databaseName": "default",
+            "databaseName": "{{ .Values.clickhouse.otelDatabase }}",
             "tableName": "otel_traces"
           },
           "kind": "trace",
@@ -163,7 +163,7 @@ hyperdx:
         },
         {
           "from": {
-            "databaseName": "default",
+            "databaseName": "{{ .Values.clickhouse.otelDatabase }}",
             "tableName": ""
           },
           "kind": "metric",
@@ -184,7 +184,7 @@ hyperdx:
         },
         {
           "from": {
-            "databaseName": "default",
+            "databaseName": "{{ .Values.clickhouse.otelDatabase }}",
             "tableName": "hyperdx_sessions"
           },
           "kind": "session",
@@ -303,6 +303,9 @@ mongodb:
 
 clickhouse:
   enabled: true
+  # Database used by the OTel ClickHouse exporter and default HyperDX sources.
+  # Must be a simple ClickHouse identifier: ^[A-Za-z_][A-Za-z0-9_]*$
+  otelDatabase: default
   # Ports used for cross-service wiring (defaultConnections)
   port: 8123
   nativePort: 9000
@@ -345,12 +348,12 @@ clickhouse:
               password: '{{ .Values.hyperdx.secrets.CLICKHOUSE_APP_PASSWORD }}'
               profile: default
               grants:
-                - query: "GRANT SHOW ON *.*, SELECT ON system.*, SELECT ON default.*"
+                - query: "GRANT SHOW ON *.*, SELECT ON system.*, SELECT ON {{ .Values.clickhouse.otelDatabase }}.*"
             otelcollector:
               password: '{{ .Values.hyperdx.secrets.CLICKHOUSE_PASSWORD }}'
               profile: default
               grants:
-                - query: "GRANT SELECT,INSERT,CREATE,SHOW ON default.*"
+                - query: "GRANT SELECT,INSERT,CREATE,SHOW ON {{ .Values.clickhouse.otelDatabase }}.*"
         extraConfig:
           max_connections: 4096
           keep_alive_timeout: 64

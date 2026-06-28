@@ -1,0 +1,109 @@
+suite: Test OTel ClickHouse Database
+templates:
+  - hyperdx/configmap.yaml
+  - hyperdx/deployment.yaml
+  - clickhouse/cluster.yaml
+
+tests:
+  - it: should render default database in config, sources, and grants
+    asserts:
+      - equal:
+          path: data.HYPERDX_OTEL_EXPORTER_CLICKHOUSE_DATABASE
+          value: default
+        template: hyperdx/configmap.yaml
+      - matchRegex:
+          path: spec.template.spec.containers[0].env[?(@.name=="DEFAULT_SOURCES")].value
+          pattern: '"databaseName": "default"'
+        template: hyperdx/deployment.yaml
+      - equal:
+          path: spec.settings.extraUsersConfig.users.app.grants[0].query
+          value: "GRANT SHOW ON *.*, SELECT ON system.*, SELECT ON default.*"
+        template: clickhouse/cluster.yaml
+      - equal:
+          path: spec.settings.extraUsersConfig.users.otelcollector.grants[0].query
+          value: "GRANT SELECT,INSERT,CREATE,SHOW ON default.*"
+        template: clickhouse/cluster.yaml
+
+  - it: should render custom database in config, sources, and grants
+    set:
+      clickhouse:
+        otelDatabase: observability
+    asserts:
+      - equal:
+          path: data.HYPERDX_OTEL_EXPORTER_CLICKHOUSE_DATABASE
+          value: observability
+        template: hyperdx/configmap.yaml
+      - matchRegex:
+          path: spec.template.spec.containers[0].env[?(@.name=="DEFAULT_SOURCES")].value
+          pattern: '"databaseName": "observability",\s*"tableName": "otel_logs"'
+        template: hyperdx/deployment.yaml
+      - matchRegex:
+          path: spec.template.spec.containers[0].env[?(@.name=="DEFAULT_SOURCES")].value
+          pattern: '"databaseName": "observability",\s*"tableName": "otel_traces"'
+        template: hyperdx/deployment.yaml
+      - matchRegex:
+          path: spec.template.spec.containers[0].env[?(@.name=="DEFAULT_SOURCES")].value
+          pattern: '"databaseName": "observability",\s*"tableName": ""'
+        template: hyperdx/deployment.yaml
+      - matchRegex:
+          path: spec.template.spec.containers[0].env[?(@.name=="DEFAULT_SOURCES")].value
+          pattern: '"databaseName": "observability",\s*"tableName": "hyperdx_sessions"'
+        template: hyperdx/deployment.yaml
+      - equal:
+          path: spec.settings.extraUsersConfig.users.app.grants[0].query
+          value: "GRANT SHOW ON *.*, SELECT ON system.*, SELECT ON observability.*"
+        template: clickhouse/cluster.yaml
+      - equal:
+          path: spec.settings.extraUsersConfig.users.otelcollector.grants[0].query
+          value: "GRANT SELECT,INSERT,CREATE,SHOW ON observability.*"
+        template: clickhouse/cluster.yaml
+
+  - it: should accept underscore and number after first character
+    set:
+      clickhouse:
+        otelDatabase: observability_1
+    asserts:
+      - equal:
+          path: data.HYPERDX_OTEL_EXPORTER_CLICKHOUSE_DATABASE
+          value: observability_1
+        template: hyperdx/configmap.yaml
+
+  - it: should reject an empty database name
+    templates:
+      - hyperdx/configmap.yaml
+    set:
+      clickhouse:
+        otelDatabase: ""
+    asserts:
+      - failedTemplate:
+          errorMessage: "clickhouse.otelDatabase must be a non-empty ClickHouse identifier matching ^[A-Za-z_][A-Za-z0-9_]*$"
+
+  - it: should reject database names with dashes
+    templates:
+      - hyperdx/configmap.yaml
+    set:
+      clickhouse:
+        otelDatabase: otel-db
+    asserts:
+      - failedTemplate:
+          errorMessage: "clickhouse.otelDatabase must be a non-empty ClickHouse identifier matching ^[A-Za-z_][A-Za-z0-9_]*$"
+
+  - it: should reject database names starting with a number
+    templates:
+      - hyperdx/configmap.yaml
+    set:
+      clickhouse:
+        otelDatabase: 123otel
+    asserts:
+      - failedTemplate:
+          errorMessage: "clickhouse.otelDatabase must be a non-empty ClickHouse identifier matching ^[A-Za-z_][A-Za-z0-9_]*$"
+
+  - it: should reject database names with dots
+    templates:
+      - hyperdx/configmap.yaml
+    set:
+      clickhouse:
+        otelDatabase: otel.db
+    asserts:
+      - failedTemplate:
+          errorMessage: "clickhouse.otelDatabase must be a non-empty ClickHouse identifier matching ^[A-Za-z_][A-Za-z0-9_]*$"

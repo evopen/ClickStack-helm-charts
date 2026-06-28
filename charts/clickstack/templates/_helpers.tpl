@@ -97,6 +97,16 @@ ClickHouse Keeper CR name
 {{- end }}
 
 {{/*
+Validate the ClickHouse database used for OTel data.
+*/}}
+{{- define "clickstack.validateOtelDatabase" -}}
+{{- $db := toString .Values.clickhouse.otelDatabase -}}
+{{- if not (regexMatch "^[A-Za-z_][A-Za-z0-9_]*$" $db) -}}
+{{- fail "clickhouse.otelDatabase must be a non-empty ClickHouse identifier matching ^[A-Za-z_][A-Za-z0-9_]*$" -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
 ClickHouse headless service name. The operator creates a headless service named {CR}-clickhouse-headless.
 */}}
 {{- define "clickstack.clickhouse.svc" -}}
