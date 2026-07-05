@@ -1,5 +1,11 @@
 # helm-charts
 
+## 3.0.1-patch.1
+
+### Patch Changes
+
+- Add configurable OTel ClickHouse database values for the ClickStack chart.
+
 ## 3.0.1
 
 ### Patch Changes
