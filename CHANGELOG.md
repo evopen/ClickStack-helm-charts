@@ -1,5 +1,11 @@
 # helm-charts
 
+## 3.0.1-patch.2
+
+### Patch Changes
+
+- Expose HyperDX app Pod affinity while preserving the configurable OTel ClickHouse database patch.
+
 ## 3.0.1-patch.1
 
 ### Patch Changes
