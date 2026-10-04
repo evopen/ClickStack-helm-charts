@@ -1,5 +1,12 @@
 # helm-charts
 
+## 3.4.0-patch.1
+
+### Patch Changes
+
+- 5b7eeea: Support configuring the OTel ClickHouse database through `clickhouse.otelDatabase`, including exporter configuration, default HyperDX sources, and ClickHouse user grants.
+- fcffd19: Expose `hyperdx.deployment.affinity` so the HyperDX app can use node and Pod affinity independently of MongoDB and the OpenTelemetry collector.
+
 ## 3.4.0
 
 ### Minor Changes
