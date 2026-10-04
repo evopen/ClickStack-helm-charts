@@ -1,4 +1,4 @@
-suite: Test nodeSelector and tolerations
+suite: Test Pod scheduling
 templates:
   - hyperdx/deployment.yaml
 
@@ -7,7 +7,7 @@ _selectors:
     path: kind
     value: Deployment
 tests:
-  - it: should not include nodeSelector and tolerations when not configured
+  - it: should not include scheduling constraints when not configured
     templates:
       - hyperdx/deployment.yaml
     asserts:
@@ -15,6 +15,46 @@ tests:
           path: spec.template.spec.nodeSelector
       - isNull:
           path: spec.template.spec.tolerations
+      - isNull:
+          path: spec.template.spec.affinity
+
+  - it: should apply preferred node affinity alongside tolerations
+    set:
+      hyperdx.deployment.tolerations:
+        - key: low-perf
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
+      hyperdx.deployment.affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - nuc-worker
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity
+          value:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - weight: 100
+                  preference:
+                    matchExpressions:
+                      - key: kubernetes.io/hostname
+                        operator: In
+                        values:
+                          - nuc-worker
+      - contains:
+          path: spec.template.spec.tolerations
+          content:
+            key: low-perf
+            operator: Equal
+            value: "true"
+            effect: NoSchedule
 
   - it: should apply nodeSelector to HyperDX deployment when configured
     set:

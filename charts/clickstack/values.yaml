@@ -75,6 +75,8 @@ hyperdx:
       failureThreshold: 3
     nodeSelector: {}
     tolerations: []
+    # Node and Pod affinity rules for the HyperDX app only.
+    affinity: {}
     topologySpreadConstraints: []
     priorityClassName: ""
     annotations: {}
