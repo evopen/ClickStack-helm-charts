@@ -48,6 +48,10 @@ spec:
       tolerations:
         {{- toYaml .Values.hyperdx.deployment.tolerations | nindent 8 }}
       {{- end }}
+      {{- with .Values.hyperdx.deployment.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- if .Values.hyperdx.deployment.topologySpreadConstraints }}
       topologySpreadConstraints:
         {{- toYaml .Values.hyperdx.deployment.topologySpreadConstraints | nindent 8 }}
